@@ -24,7 +24,7 @@ PHONE_HEADERS = {
 
 def normalize_phone(value: str) -> str:
     value = (value or "").strip()
-    value = re.sub(r"[^\\d+]", "", value)
+    value = re.sub(r"[^\d+]", "", value)
     if value.startswith("+91"):
         value = value[3:]
     elif value.startswith("91") and len(value) == 12:
@@ -39,9 +39,9 @@ async def check_with_authorized_api(mobile: str) -> str:
 @dp.message(CommandStart())
 async def start(message: Message):
     await message.answer(
-        "CSV Mobile Processor ready ✅\\n\\n"
+        "CSV Mobile Processor ready ✅\n\n"
         "CSV file upload karo. Header mein mobile/phone/number jaisa column name rakho; "
-        "ya mobile numbers first column mein rakho.\\n"
+        "ya mobile numbers first column mein rakho.\n"
         "Abhi authorized status-check API configured nahi hai, isliye actual registration "
         "status check nahi hoga."
     )
@@ -49,7 +49,7 @@ async def start(message: Message):
 @dp.message(Command("help"))
 async def help_cmd(message: Message):
     await message.answer(
-        "CSV format example:\\nmobile\\n9876543210\\n9123456789\\n\\n"
+        "CSV format example:\nmobile\n9876543210\n9123456789\n\n"
         "CSV upload karo. Output mein original row, normalized number, validation aur API status milega."
     )
 
@@ -69,7 +69,7 @@ async def handle_csv(message: Message):
         content = await bot.download_file(file.file_path)
         raw = content.read().decode("utf-8-sig", errors="replace")
         try:
-            dialect = csv.Sniffer().sniff(raw[:4096], delimiters=",;\\t")
+            dialect = csv.Sniffer().sniff(raw[:4096], delimiters=",;\t")
         except csv.Error:
             dialect = csv.excel
 
@@ -97,7 +97,7 @@ async def handle_csv(message: Message):
         for row in reader:
             count += 1
             mobile = normalize_phone(str(row.get(mobile_header, "")))
-            valid = bool(re.fullmatch(r"[6-9]\\d{9}", mobile))
+            valid = bool(re.fullmatch(r"[6-9]\d{9}", mobile))
             status = await check_with_authorized_api(mobile) if valid else "INVALID_NUMBER"
             result_row = dict(row)
             result_row["normalized_mobile"] = mobile
@@ -112,7 +112,7 @@ async def handle_csv(message: Message):
         result_file = BufferedInputFile(output.getvalue().encode("utf-8-sig"), filename="csv_results.csv")
         await message.answer_document(
             result_file,
-            caption=f"Done ✅ Total rows: {count}\\nStatus API_NOT_CONFIGURED hai jab tak official/authorized API connect nahi hoti."
+            caption=f"Done ✅ Total rows: {count}\nStatus API_NOT_CONFIGURED hai jab tak official/authorized API connect nahi hoti."
         )
     except Exception:
         logging.exception("CSV processing failed")
